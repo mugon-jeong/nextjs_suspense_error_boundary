@@ -1,7 +1,7 @@
-import { Todo } from "../../domain/todo/TodoType";
-import Pagination from "../Pagination";
+import { Todo } from "../TodoType";
+import Pagination from "../../../components/Pagination";
 import { useState } from "react";
-import TodoClass from "../../domain/todo/TodoService";
+import TodoClass from "../TodoService";
 
 function TodosComp() {
   const [activePage, setActivePage] = useState(1);

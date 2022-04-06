@@ -1,17 +1,47 @@
 import { NextPage } from "next";
-import AsyncBoundaryWithQuery from "../../util/error/boundries/AsyncBoundaryWithQuery";
-import TodosComp from "../../components/todos/TodoList";
-import { useState } from "react";
-import useAuthService from "../../domain/auth/AuthService";
+import { useEffect, useState } from "react";
+
 import { useRouter } from "next/router";
 import { useMutation } from "react-query";
+import { useFetchLogin } from "../../module/auth/AuthService";
+import Cookies from "js-cookie";
+import axiosClient from "../../util/axiosClient";
 
-const Todos: NextPage = () => {
+const Login: NextPage = () => {
   const [email, setEmail] = useState("lee@apple.com");
   const [password, setPassword] = useState("Asd123@@");
   const [autoLogin, setAutoLogin] = useState(false);
-  const { mutate: login, isSuccess } = useAuthService().useLoginUser(autoLogin);
+  const { mutate: login, isSuccess } = useFetchLogin({
+    onSuccess(response) {
+      console.log(response.data);
+      const token = response.data;
+      Cookies.set("access_token", token.access_token, {
+        expires: undefined, // 브라우저 종료시 삭제
+      });
+
+      // 리프레시 토큰
+      // TODO 토큰만료일 확인해서 교체할 것
+      if (autoLogin) {
+        const expires = new Date();
+        expires.setDate(expires.getDate() + 100);
+        Cookies.set("refresh_token", token.refresh_token, {
+          expires: expires, // 만료일 까지 유지
+        });
+      } else {
+        Cookies.set("refresh_token", token.refresh_token);
+      }
+    },
+    onError(res) {
+      alert("로그인 실패");
+      console.log(res.response);
+    },
+  });
   const router = useRouter();
+  useEffect(() => {
+    if (isSuccess) {
+      router.push("/");
+    }
+  }, [isSuccess]);
   async function onSubmit({
     email,
     password,
@@ -26,9 +56,6 @@ const Todos: NextPage = () => {
     formData.append("username", email);
     formData.append("password", password);
     login(formData);
-    if (isSuccess) {
-      await router.push("/");
-    }
   }
   return (
     <>
@@ -41,11 +68,16 @@ const Todos: NextPage = () => {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
+
         <button onClick={async () => await onSubmit({ email, password })}>
           submit
+        </button>
+        <h4>{`${autoLogin}`}</h4>
+        <button onClick={async () => setAutoLogin(!autoLogin)}>
+          autoLogin
         </button>
       </div>
     </>
   );
 };
-export default Todos;
+export default Login;

@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 
-import TodosComp from "../../components/todos/TodoList";
+import TodosComp from "../../module/todo/ui/TodoList";
 import AsyncBoundaryWithQuery from "../../util/error/boundries/AsyncBoundaryWithQuery";
 
 const Todos: NextPage = () => {
